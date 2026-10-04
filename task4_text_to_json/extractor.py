@@ -136,7 +136,8 @@ def validate(record: dict) -> dict:
     if missing or extra:
         raise ValueError(f"Schema mismatch: missing={sorted(missing)} extra={sorted(extra)}")
     for key, expected in SCHEMA.items():
-        if not isinstance(record[key], expected):
+        # bool is a subclass of int, so isinstance alone would accept age=True.
+        if not isinstance(record[key], expected) or (key != "is_deceased" and isinstance(record[key], bool)):
             raise TypeError(f"Field {key!r} has type {type(record[key]).__name__}")
     if record["age"] is not None and not 0 <= record["age"] <= 130:
         raise ValueError(f"Implausible age {record['age']}")

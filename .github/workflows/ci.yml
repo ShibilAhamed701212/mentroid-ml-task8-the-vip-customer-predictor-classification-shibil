@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      # The unit tests cover only the model-free code, so torch and the
+      # Hugging Face models are not installed here.
+      - run: pip install pytest ruff
+      - run: ruff check .
+      - run: pytest -q tests
+      - name: Task 2 end-to-end on the bundled text
+        run: python task2_text_pipeline/pipeline.py data/pride_and_prejudice_ch1-3.txt --show 0
