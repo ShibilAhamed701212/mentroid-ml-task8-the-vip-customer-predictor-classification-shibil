@@ -89,7 +89,7 @@ class IntentRouter:
 
         decisions = []
         for msg, out in zip(messages, outputs):
-            scores = {self._description_to_route[l]: round(float(s), 4) for l, s in zip(out["labels"], out["scores"])}
+            scores = {self._description_to_route[label]: round(float(s), 4) for label, s in zip(out["labels"], out["scores"])}
             best, best_score = max(scores.items(), key=lambda kv: kv[1])
             if best_score >= self.threshold:
                 decisions.append(RoutingDecision(msg, best, best_score, scores))
@@ -118,7 +118,7 @@ def evaluate(router: IntentRouter, dataset: list[tuple[str, str]], title: str) -
 
     confusion = Counter((e, d.route) for d, e in zip(decisions, expected))
     print("Confusion matrix (rows = expected, cols = predicted):")
-    print(" " * 18 + "".join(f"{l.split()[0]:>12}" for l in router.labels))
+    print(" " * 18 + "".join(f"{label.split()[0]:>12}" for label in router.labels))
     for e in router.labels:
         print(f"{e:<18}" + "".join(f"{confusion[(e, p)]:>12}" for p in router.labels))
     return accuracy

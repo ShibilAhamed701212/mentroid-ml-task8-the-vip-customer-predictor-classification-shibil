@@ -69,6 +69,17 @@ def test_oversize_sentence_becomes_its_own_chunk():
     assert len(oversize) == 1 and oversize[0].first_sentence == oversize[0].last_sentence == 2
 
 
+def test_every_chunk_adds_a_new_sentence():
+    # A long sentence after a short tail used to produce a chunk made only of
+    # sentences already in the previous chunk (seen once in the full book).
+    sents = _sentences(1, 150) + _sentences(1, 30) + _sentences(1, 175) + _sentences(1, 10)
+    chunks = chunk_sentences(sents, chunk_words=200, overlap_words=40)
+    for prev, cur in zip(chunks, chunks[1:]):
+        assert cur.last_sentence > prev.last_sentence
+    assert all(c.word_count <= 200 for c in chunks)
+    assert chunks[-1].last_sentence == len(sents) - 1
+
+
 def test_invalid_chunk_parameters():
     with pytest.raises(ValueError):
         chunk_sentences(["a."], chunk_words=100, overlap_words=100)
@@ -107,6 +118,8 @@ def test_validate_enforces_schema():
     assert validate(ok) == ok
     with pytest.raises(TypeError):
         validate({**ok, "age": "3"})
+    with pytest.raises(TypeError):
+        validate({**ok, "age": True})
     with pytest.raises(ValueError):
         validate({**ok, "extra": 1})
     with pytest.raises(ValueError):

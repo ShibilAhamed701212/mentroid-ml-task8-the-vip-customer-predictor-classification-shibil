@@ -191,8 +191,10 @@ def chunk_sentences(sentences: list[str], chunk_words: int = 200, overlap_words:
 
         # Next chunk starts with the longest run of trailing sentences that fits in
         # the overlap budget, but must start after this chunk's start so we progress.
+        # The overlap must also leave room for the next new sentence; otherwise the
+        # next chunk would hold only sentences already in this one.
         next_start = end + 1
-        budget = overlap_words
+        budget = min(overlap_words, chunk_words - counts[next_start])
         while next_start - 1 > start and counts[next_start - 1] <= budget:
             next_start -= 1
             budget -= counts[next_start]
