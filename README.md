@@ -31,12 +31,19 @@ All four tasks were run with Python 3.12, torch 2.14, transformers 5.18, sentenc
 ## Testing
 
 ```bash
-pip install pytest ruff
-pytest -q tests        # 19 model-free unit tests for tasks 2 and 4
+pip install pytest ruff numpy faiss-cpu
+pytest -q tests        # 31 unit tests, no model downloads
 ruff check .           # lint (config in ruff.toml)
 ```
 
-GitHub Actions (`.github/workflows/ci.yml`) runs ruff, the unit tests and task 2 on the chapters I–III text on Python 3.10–3.13. It does not download the models, so tasks 1, 3 and 4 are only checked by running them locally.
+- `tests/test_pipeline.py` covers task 2 and task 4's parsing and validation helpers.
+- `tests/test_model_logic.py` covers the code around the models, with each model replaced by a small fake:
+  - task 1 ranking, `top_k` clamping and empty queries, on both the numpy and FAISS backends;
+  - task 3 threshold and catch-all routing;
+  - task 4 age computation, grounding and death-date handling.
+- Without faiss-cpu, the FAISS cases are skipped (29 tests run). Without numpy, the whole model-logic file is skipped.
+
+GitHub Actions (`.github/workflows/ci.yml`) runs ruff, the tests and task 2 on the chapters I–III text on Python 3.10–3.13. It does not download the models, so the models' actual answers are only checked by running the tasks locally.
 
 ---
 
@@ -188,7 +195,7 @@ Fixed:
 - Added a ruff config and a CI workflow; renamed two ambiguous loop variables flagged by ruff (E741).
 
 Known limitations:
-- The model-backed tasks (1, 3, 4) have no automated tests; CI covers only the deterministic code.
+- The tests stub the models, so a change in a model's answers (e.g. after a `transformers` upgrade) is only caught by running the tasks locally.
 - `requirements.txt` gives lower bounds only, so a fresh install may pick newer, untested versions.
 - Task 2's sentence splitter treats any single letter followed by a period as an initial, so "So do I. Then..." stays one sentence.
 

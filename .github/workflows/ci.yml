@@ -17,9 +17,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      # The unit tests cover only the model-free code, so torch and the
-      # Hugging Face models are not installed here.
-      - run: pip install pytest ruff
+      # The tests stub out the models, so torch and the Hugging Face models are
+      # not installed here. numpy and faiss-cpu cover task 1's search backends.
+      - run: pip install pytest ruff numpy faiss-cpu
       - run: ruff check .
       - run: pytest -q tests
       - name: Task 2 end-to-end on the bundled text
