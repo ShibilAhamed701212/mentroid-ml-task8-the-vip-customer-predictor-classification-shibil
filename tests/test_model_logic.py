@@ -14,11 +14,16 @@ ROOT = Path(__file__).resolve().parents[1]
 for task in ("task1_semantic_search", "task3_intent_classifier", "task4_text_to_json"):
     sys.path.insert(0, str(ROOT / task))
 
-np = pytest.importorskip("numpy")
-
 import classifier  # noqa: E402
 import extractor  # noqa: E402
-import search  # noqa: E402
+
+try:  # task 1 needs numpy; tasks 3 and 4 still run without it
+    import numpy as np
+    import search
+except ImportError:
+    np = search = None
+
+needs_numpy = pytest.mark.skipif(np is None, reason="numpy not installed")
 
 
 # ---------------------------------------------------------------- task 1 ---
@@ -56,9 +61,10 @@ def _engine(use_faiss):
     return engine
 
 
-BACKENDS = [False] + ([True] if search.faiss is not None else [])
+BACKENDS = [False] + ([True] if search is not None and search.faiss is not None else [])
 
 
+@needs_numpy
 @pytest.mark.parametrize("use_faiss", BACKENDS)
 def test_search_ranks_by_cosine(use_faiss):
     results = _engine(use_faiss).search("a heist for money", top_k=2)
@@ -67,6 +73,7 @@ def test_search_ranks_by_cosine(use_faiss):
     assert results[0].score >= results[1].score
 
 
+@needs_numpy
 @pytest.mark.parametrize("use_faiss", BACKENDS)
 def test_search_clamps_top_k_and_rejects_empty_query(use_faiss):
     engine = _engine(use_faiss)
@@ -143,9 +150,10 @@ def test_extract_computes_age_at_death():
 
 
 def test_extract_living_person_uses_reference_date():
+    # A reference date far from today, so the test fails if extract() reads the clock.
     text = "Lionel Messi (born 24 June 1987) is an Argentine footballer."
-    record = _extractor({"name": "Lionel Messi", "birth_date": "24 June 1987"}).extract(text)
-    assert record["age"] == 39 and record["is_deceased"] is False
+    record = _extractor({"name": "Lionel Messi", "birth_date": "24 June 1987"}, as_of=date(2040, 6, 23)).extract(text)
+    assert record["age"] == 52 and record["is_deceased"] is False
 
 
 def test_extract_ignores_death_date_that_echoes_birth_date():

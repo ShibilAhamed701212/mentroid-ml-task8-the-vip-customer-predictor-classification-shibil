@@ -41,7 +41,7 @@ ruff check .           # lint (config in ruff.toml)
   - task 1 ranking, `top_k` clamping and empty queries, on both the numpy and FAISS backends;
   - task 3 threshold and catch-all routing;
   - task 4 age computation, grounding and death-date handling.
-- Without faiss-cpu, the FAISS cases are skipped (29 tests run). Without numpy, the whole model-logic file is skipped.
+- Without faiss-cpu, the FAISS cases are skipped (29 tests run). Without numpy, the task 1 search tests are skipped as well.
 
 GitHub Actions (`.github/workflows/ci.yml`) runs ruff, the tests and task 2 on the chapters I–III text on Python 3.10–3.13. It does not download the models, so the models' actual answers are only checked by running the tasks locally.
 
